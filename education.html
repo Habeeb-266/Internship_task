@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Enquiry Bot</title>
+  <style>
+    :root {
+      --bg: #f4f7ff;
+      --card: #ffffff;
+      --text: #1f2a44;
+      --muted: #5f6f92;
+      --primary: #5b6cff;
+      --accent: #00b7c2;
+      --border: #dfe6ff;
+      --bot: #edf2ff;
+      --user: #dff9ff;
+      --ok: #178e59;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(145deg, #eef2ff, #e8fbff, #fff6fb);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 22px 14px 30px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .top {
+      background: linear-gradient(120deg, var(--primary), #7e55ff, var(--accent));
+      color: #fff;
+      border-radius: 18px;
+      padding: 24px 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 14px 28px rgba(28, 46, 90, 0.2);
+    }
+
+    .top h1 {
+      font-size: clamp(1.4rem, 2.8vw, 2rem);
+      margin-bottom: 8px;
+    }
+
+    .top p {
+      opacity: 0.96;
+      font-size: 0.95rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 24px rgba(24, 40, 82, 0.1);
+      padding: 16px;
+    }
+
+    .chat-box {
+      height: 420px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      overflow-y: auto;
+      background: #fbfcff;
+      margin-bottom: 10px;
+    }
+
+    .msg {
+      margin-bottom: 10px;
+      max-width: 88%;
+      padding: 9px 11px;
+      border-radius: 10px;
+      line-height: 1.4;
+      font-size: 0.93rem;
+      white-space: pre-line;
+    }
+
+    .bot {
+      background: var(--bot);
+      border: 1px solid #dbe4ff;
+    }
+
+    .user {
+      margin-left: auto;
+      background: var(--user);
+      border: 1px solid #cdeff9;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    input {
+      flex: 1;
+      border: 1px solid #d5deff;
+      border-radius: 10px;
+      padding: 10px;
+      outline: none;
+      font-size: 0.92rem;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(91, 108, 255, 0.12);
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #fff;
+      background: linear-gradient(120deg, var(--primary), var(--accent));
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .side h2 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .save-status {
+      color: var(--ok);
+      font-weight: 700;
+      min-height: 20px;
+      font-size: 0.92rem;
+      margin: 10px 0 8px;
+    }
+
+    .enquiry-list {
+      border-top: 1px solid #ebefff;
+      margin-top: 8px;
+      padding-top: 10px;
+    }
+
+    .item {
+      background: #f8faff;
+      border: 1px solid #e6edff;
+      border-radius: 10px;
+      padding: 9px;
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+      color: #33466f;
+    }
+
+    .csv-open {
+      display: inline-block;
+      margin-bottom: 10px;
+      text-decoration: none;
+      border-radius: 9px;
+      padding: 9px 12px;
+      color: #fff;
+      background: linear-gradient(120deg, var(--primary), var(--accent));
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <h1>SmartAI Learning Center - Course Bot</h1>
+      <p>Simple chatbot for multiple courses with CSV enquiry saving through Python backend.</p>
+    </header>
+
+    <section class="layout">
+      <section class="card">
+        <div id="chatBox" class="chat-box" aria-live="polite"></div>
+        <div class="controls">
+          <input id="userInput" type="text" placeholder="Type here (example: Python / details / fee)">
+          <button id="sendBtn" type="button">Send</button>
+        </div>
+      </section>
+
+      <aside class="card side">
+        <h2>Course Questions</h2>
+        <p class="hint">Type a course name (Python, Data Analytics, Web Development), then ask details/fee/duration/syllabus/timing.</p>
+        <h2>Recent Enquiries</h2>
+        <a class="csv-open" href="/api/enquiries/csv" target="_blank" rel="noopener noreferrer">Open CSV</a>
+        <p id="saveStatus" class="save-status"></p>
+        <div id="enquiryList" class="enquiry-list"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const courses = {
+      python: {
+        name: "Python",
+        duration: "3 months",
+        fee: "Rs. 5000",
+        syllabus: "Basics, OOP, File Handling, Modules, Mini Project",
+        timing: "Weekdays 6:00 PM - 7:30 PM"
+      },
+      "data analytics": {
+        name: "Data Analytics",
+        duration: "4 months",
+        fee: "Rs. 7000",
+        syllabus: "Excel, SQL, Power BI, Python for Data Analysis",
+        timing: "Weekdays 7:00 PM - 8:30 PM"
+      },
+      "web development": {
+        name: "Web Development",
+        duration: "5 months",
+        fee: "Rs. 8000",
+        syllabus: "HTML, CSS, JavaScript, React, Node.js Basics",
+        timing: "Weekends 10:00 AM - 1:00 PM"
+      }
+    };
+
+    const chatBox = document.getElementById("chatBox");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const enquiryList = document.getElementById("enquiryList");
+    const saveStatus = document.getElementById("saveStatus");
+
+    let step = "course";
+    let studentName = "";
+    let selectedCourseKey = "";
+
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = `msg ${sender}`;
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function saveEnquiry(course, name, phone) {
+      const response = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          course: course.name,
+          duration: course.duration,
+          fee: course.fee,
+          name,
+          phone
+        })
+      });
+      return response.json();
+    }
+
+    async function renderEnquiries() {
+      enquiryList.innerHTML = '<div class="item">Loading...</div>';
+      try {
+        const response = await fetch("/api/enquiries");
+        const result = await response.json();
+        const all = result.enquiries || [];
+        enquiryList.innerHTML = "";
+
+        if (!all.length) {
+          enquiryList.innerHTML = '<div class="item">No enquiries saved yet.</div>';
+          return;
+        }
+
+        all.slice().reverse().forEach((e) => {
+          const item = document.createElement("div");
+          item.className = "item";
+          item.textContent = `${e.name} | ${e.phone} | ${e.course} (${e.duration}, ${e.fee})`;
+          enquiryList.appendChild(item);
+        });
+      } catch (error) {
+        enquiryList.innerHTML = '<div class="item">Unable to load enquiries. Start Python server.</div>';
+      }
+    }
+
+    function startChat() {
+      addMessage("Welcome to ABC Training Institute", "bot");
+      addMessage("How can I help you today?\n(Python / Data Analytics / Web Development)", "bot");
+    }
+
+    function getCourseReply(course, key) {
+      if (key === "fee") return `${course.name} Course Fee: ${course.fee}`;
+      if (key === "duration") return `${course.name} Course Duration: ${course.duration}`;
+      if (key === "details") {
+        return `${course.name} Course Details:\nDuration: ${course.duration}\nFee: ${course.fee}\nTiming: ${course.timing}`;
+      }
+      if (key === "syllabus") return `${course.name} Syllabus: ${course.syllabus}`;
+      if (key === "timing" || key === "time") return `${course.name} Class Timing: ${course.timing}`;
+      return "";
+    }
+
+    async function handleInput() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      userInput.value = "";
+      saveStatus.textContent = "";
+
+      if (step === "course") {
+        const key = text.toLowerCase();
+
+        const selectedCourse = courses[selectedCourseKey];
+        const replyForSelected = selectedCourse ? getCourseReply(selectedCourse, key) : "";
+        if (replyForSelected) {
+          addMessage(replyForSelected, "bot");
+          return;
+        }
+
+        if (!courses[key]) {
+          addMessage("Please choose a valid course: Python / Data Analytics / Web Development", "bot");
+          return;
+        }
+
+        selectedCourseKey = key;
+        addMessage(
+          `${courses[key].name} Course Details:\nDuration: ${courses[key].duration}\nFee: ${courses[key].fee}`,
+          "bot"
+        );
+        addMessage("May I know your name?", "bot");
+        step = "name";
+        return;
+      }
+
+      if (step === "name") {
+        studentName = text;
+        addMessage("Please enter your phone number:", "bot");
+        step = "phone";
+        return;
+      }
+
+      if (step === "phone") {
+        if (!/^[0-9]{10}$/.test(text)) {
+          addMessage("Please enter a valid 10-digit phone number.", "bot");
+          return;
+        }
+
+        const currentCourse = courses[selectedCourseKey];
+        try {
+          const result = await saveEnquiry(currentCourse, studentName, text);
+          if (!result.ok) {
+            addMessage("Unable to save enquiry now. Please try again.", "bot");
+            saveStatus.textContent = "";
+            return;
+          }
+
+          addMessage(`Thank you ${studentName}! Our team will contact you soon.`, "bot");
+          saveStatus.textContent = `Enquiry saved to CSV for ${currentCourse.name}.`;
+          renderEnquiries();
+          step = "course";
+          studentName = "";
+          selectedCourseKey = "";
+          addMessage("For another enquiry, choose: Python / Data Analytics / Web Development", "bot");
+        } catch (error) {
+          addMessage("Server not connected. Start Python app to save CSV data.", "bot");
+          saveStatus.textContent = "";
+        }
+      }
+    }
+
+    sendBtn.addEventListener("click", handleInput);
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleInput();
+    });
+
+    startChat();
+    renderEnquiries();
+  </script>
+</body>
+</html>
